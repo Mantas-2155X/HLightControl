@@ -17,8 +17,6 @@ namespace HS2_HLightControl
         private static int multiplier = 1;
         
         private static Light backLight;
-        private static Light camLight;
-        
         private static Transform camLightTr;
 
         private static GameObject oldParent;
@@ -27,9 +25,7 @@ namespace HS2_HLightControl
         private static bool lockCamLight;
         
         private void Awake() => HarmonyWrapper.PatchAll(typeof(HS2_HLightControl));
-
-        // Maybe contribute to KKAPI with this later?
-        // ..marco said no :sadpepe:
+        
         private static void AddBtn(Transform background, Transform source, string name, bool resize, bool toggled, UnityAction<bool> clickEvent)
         {
             // Set names for object and text
@@ -78,9 +74,7 @@ namespace HS2_HLightControl
             camLightTr = camLightObj.transform;
             
             backLight = backLightObj.GetComponent<Light>();
-            camLight = camLightObj.GetComponent<Light>();
-            
-            if (backLight == null || camLight == null)
+            if (backLight == null)
                 return;
 
             var UI = GameObject.Find("UI");
@@ -102,15 +96,7 @@ namespace HS2_HLightControl
                 
                 backLight.enabled = value;
             });
-            
-            AddBtn(back, orig, "Camlight", false, true, delegate(bool value)
-            {
-                if (camLight == null)
-                    return;
-                
-                camLight.enabled = value;
-            });
-            
+
             AddBtn(back, orig, "Lock Camlight", true, false, delegate(bool value)
             {
                 lockCamLight = value;
@@ -137,5 +123,8 @@ namespace HS2_HLightControl
                 }
             });
         }
+        
+        [HarmonyPostfix, HarmonyPatch(typeof(HScene), "EndProc")]
+        public static void HScene_EndProc_Cleanup() => multiplier = 1;
     }
 }
