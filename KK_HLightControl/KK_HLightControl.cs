@@ -39,6 +39,10 @@ namespace KK_HLightControl
             
             // Clear listeners and add own custom event
             var toggle = copy.GetComponentInChildren<Toggle>();
+            
+            for (var i = 0; i < toggle.onValueChanged.GetPersistentEventCount(); i++)
+                toggle.onValueChanged.SetPersistentListenerState(i, UnityEventCallState.Off);
+            
             toggle.onValueChanged.RemoveAllListeners();
             toggle.isOn = toggled;
 
