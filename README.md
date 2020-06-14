@@ -1,5 +1,5 @@
 # HLightControl  
-This plugin allows you to change some camera light settings during H
+This plugin allows you to change some light settings during H
 
 # DO NOT REUPLOAD WITHOUT PERMISSION | 未经许可请勿转载  
 
