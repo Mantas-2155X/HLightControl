@@ -16,3 +16,6 @@ This plugin allows you to change some light settings during H
 
 **Installation:**  
 * Unzip `GAME_HLightControl.zip` into your game directory. If done correctly, in `BepInEx/plugins/2155X/` you should see `GAME_HLightControl.dll`  
+
+**Notes for Koikatsu:**  
+* If you have the old plugin `KK_HCameraLight.dll`, please remove it to avoid conflicts  
