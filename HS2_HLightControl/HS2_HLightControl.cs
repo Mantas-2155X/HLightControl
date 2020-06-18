@@ -108,24 +108,24 @@ namespace HS2_HLightControl
             var text = orig.GetComponentInChildren<Text>();
             text.alignment = TextAnchor.MiddleLeft;
 
-            // Make textbox wider
+            // Make textbox wider and move to the right
             var textRect = text.gameObject.GetComponent<RectTransform>();
             var oldTeMin = textRect.offsetMin;
             var oldTeMax = textRect.offsetMax;
             
-            textRect.offsetMin = new Vector2(95, oldTeMin.y);
-            textRect.offsetMax = new Vector2(315, oldTeMax.y);
+            textRect.offsetMin = new Vector2(128, oldTeMin.y);
+            textRect.offsetMax = new Vector2(348, oldTeMax.y);
             textRect.sizeDelta = new Vector2(220, 30);
             
             var toggle = orig.GetComponentInChildren<Toggle>();
             
-            // Move toggle to the right
+            // Move toggle to the left
             var toggleRect = toggle.gameObject.GetComponent<RectTransform>();
             var oldToMin = toggleRect.offsetMin;
             var oldToMax = toggleRect.offsetMax;
             
-            toggleRect.offsetMin = new Vector2(315, oldToMin.y);
-            toggleRect.offsetMax = new Vector2(345, oldToMax.y);
+            toggleRect.offsetMin = new Vector2(98, oldToMin.y);
+            toggleRect.offsetMax = new Vector2(128, oldToMax.y);
             toggleRect.sizeDelta = new Vector2(30, 30);
             
             lights = FindObjectsOfType<Light>();
