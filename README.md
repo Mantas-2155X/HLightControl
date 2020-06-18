@@ -5,6 +5,7 @@ This plugin allows you to change some light settings during H
 
 **Current Features:**  
 * Freeze camera light  
+* Lower shadow resolution (1-15FPS boost)  
 * [HS2] Disable backlight (3-7FPS boost)  
 
 **Usage:**  
@@ -17,5 +18,10 @@ This plugin allows you to change some light settings during H
 **Installation:**  
 * Unzip `GAME_HLightControl.zip` into your game directory. If done correctly, in `BepInEx/plugins/2155X/` you should see `GAME_HLightControl.dll`  
 
-**Notes for Koikatsu:**  
-* If you have the old plugin `KK_HCameraLight.dll`, please remove it to avoid conflicts  
+**Configuration:**  
+* Open the plugin settings and change the settings according to your needs.  
+
+**Notes:**
+* Needs https://github.com/BepInEx/BepInEx for the plugin.
+* Needs https://github.com/BepInEx/BepInEx.ConfigurationManager for the configuration.
+* [KK] If you have the old plugin `KK_HCameraLight.dll`, please remove it to avoid conflicts  
