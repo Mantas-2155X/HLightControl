@@ -116,8 +116,12 @@ namespace KK_HLightControl
         }
         
         [HarmonyPostfix, HarmonyPatch(typeof(HSceneProc), "EndProc")]
-        public static void HSceneProc_EndProc_Cleanup() => created = false;
-        
+        public static void HSceneProc_EndProc_Cleanup()
+        {
+            created = false;
+            btn_LowerLightsResolution(false);
+        }
+
         private static void btn_LockCamLight(bool value, HSprite __instance)
         {
             lockCamLight = value;
