@@ -1,5 +1,7 @@
-﻿using BepInEx;
-using BepInEx.Harmony;
+﻿using System.Linq;
+
+using BepInEx;
+using BepInEx.Configuration;
 
 using HarmonyLib;
 
@@ -15,7 +17,7 @@ namespace KK_HLightControl
     [BepInPlugin(nameof(KK_HLightControl), nameof(KK_HLightControl), VERSION)]
     public class KK_HLightControl : BaseUnityPlugin
     {
-        public const string VERSION = "1.0.0";
+        public const string VERSION = "1.1.0";
         
         private static Transform camLightTr;
 
@@ -25,8 +27,18 @@ namespace KK_HLightControl
         private static bool lockCamLight;
         private static bool created;
         
-        private void Awake() => HarmonyWrapper.PatchAll(typeof(KK_HLightControl));
+        private static Light[] lights;
+        private static int[] resolutions;
         
+        private static ConfigEntry<int> customShadowResolution { get; set; }
+        
+        private void Awake()
+        {
+            customShadowResolution = Config.Bind("General", "Shadow resolution target", 1024, new ConfigDescription("What resolution to apply when clicking 'Lower shadow resolution'"));
+
+            Harmony.CreateAndPatchAll(typeof(KK_HLightControl));
+        }
+
         private static void AddBtn(Transform background, Transform source, string name, bool resize, bool toggled, UnityAction<bool> clickEvent)
         {
             // Set names for object and text
@@ -91,38 +103,62 @@ namespace KK_HLightControl
             if (orig == null)
                 return;
 
-            AddBtn(back, orig, "Lock Camlight", true, false, delegate(bool value)
-            {
-                lockCamLight = value;
-
-                if (lockCamLight)
-                {
-                    oldParent = camLightTr.parent.gameObject;
-
-                    newParent = new GameObject("CamLightLock");
-                    newParent.transform.position = oldParent.transform.position;
-                    newParent.transform.eulerAngles = oldParent.transform.eulerAngles;
-
-                    camLightTr.parent = newParent.transform;
-                }
-                else if(oldParent != null)
-                {
-                    camLightTr.parent = oldParent.transform;
-
-                    __instance.OnClickLightDirInit(0);
-                    __instance.OnClickLightDirInit(1);
-               
-                    Destroy(newParent);
-                    newParent = null;
-                }
-                
-                Utils.Sound.Play(SystemSE.sel);
-            });
+            lights = FindObjectsOfType<Light>();
+            resolutions = new int[lights.Length];
+            
+            for (var i = 0; i < lights.Length; i++)
+                resolutions[i] = lights[i] != null ? lights[i].shadowCustomResolution : -1;
+            
+            AddBtn(back, orig, "Lock Camlight", false, false, delegate(bool value) { btn_LockCamLight(value, __instance); });
+            AddBtn(back, orig, "Lower Shadow Resolution", true, false, btn_LowerLightsResolution);
 
             created = true;
         }
         
         [HarmonyPostfix, HarmonyPatch(typeof(HSceneProc), "EndProc")]
         public static void HSceneProc_EndProc_Cleanup() => created = false;
+        
+        private static void btn_LockCamLight(bool value, HSprite __instance)
+        {
+            lockCamLight = value;
+
+            if (lockCamLight)
+            {
+                oldParent = camLightTr.parent.gameObject;
+
+                newParent = new GameObject("CamLightLock");
+                newParent.transform.position = oldParent.transform.position;
+                newParent.transform.eulerAngles = oldParent.transform.eulerAngles;
+
+                camLightTr.parent = newParent.transform;
+            }
+            else if(oldParent != null)
+            {
+                camLightTr.parent = oldParent.transform;
+
+                __instance.OnClickLightDirInit(0);
+                __instance.OnClickLightDirInit(1);
+               
+                Destroy(newParent);
+                newParent = null;
+            }
+                
+            Utils.Sound.Play(SystemSE.sel);
+        }
+        
+        private static void btn_LowerLightsResolution(bool value)
+        {
+            if (value)
+            {
+                foreach (var t in lights.Where(t => t != null))
+                    t.shadowCustomResolution = customShadowResolution.Value;
+            }
+            else
+            {
+                for (var i = 0; i < lights.Length; i++)
+                    if(lights[i] != null)
+                        lights[i].shadowCustomResolution = resolutions[i];
+            }
+        }
     }
 }

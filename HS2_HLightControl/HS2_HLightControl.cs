@@ -1,5 +1,7 @@
-﻿using BepInEx;
-using BepInEx.Harmony;
+﻿using System.Linq;
+
+using BepInEx;
+using BepInEx.Configuration;
 
 using HarmonyLib;
 
@@ -12,7 +14,7 @@ namespace HS2_HLightControl
     [BepInPlugin(nameof(HS2_HLightControl), nameof(HS2_HLightControl), VERSION)]
     public class HS2_HLightControl : BaseUnityPlugin
     {
-        public const string VERSION = "1.0.0";
+        public const string VERSION = "1.1.0";
 
         private static int multiplier = 1;
         
@@ -23,9 +25,20 @@ namespace HS2_HLightControl
         private static GameObject newParent;
 
         private static bool lockCamLight;
+        private static bool created;
+
+        private static Light[] lights;
+        private static int[] resolutions;
         
-        private void Awake() => HarmonyWrapper.PatchAll(typeof(HS2_HLightControl));
-        
+        private static ConfigEntry<int> customShadowResolution { get; set; }
+
+        private void Awake()
+        {
+            customShadowResolution = Config.Bind("General", "Shadow resolution target", 1024, new ConfigDescription("What resolution to apply when clicking 'Lower shadow resolution'"));
+
+            Harmony.CreateAndPatchAll(typeof(HS2_HLightControl));
+        }
+
         private static void AddBtn(Transform background, Transform source, string name, bool resize, bool toggled, UnityAction<bool> clickEvent)
         {
             // Set names for object and text
@@ -35,14 +48,14 @@ namespace HS2_HLightControl
             var text = copy.GetComponentInChildren<Text>();
             text.text = name;
             text.resizeTextForBestFit = resize;
-            
+
             // Clear listeners and add own custom event
             var toggle = copy.GetComponentInChildren<Toggle>();
             toggle.onValueChanged.RemoveAllListeners();
             toggle.isOn = toggled;
 
             toggle.onValueChanged.AddListener(clickEvent);
-            
+
             // Lower the position
             var newRect = copy.GetComponent<RectTransform>();
             var oldLMin = newRect.offsetMin;
@@ -63,6 +76,9 @@ namespace HS2_HLightControl
         [HarmonyPostfix, HarmonyPatch(typeof(HSceneSprite), "SetSelectSlider")]
         public static void HSceneSprite_SetSelectSlider_CreateButtons(HSceneSprite __instance)
         {
+            if (created)
+                return;
+            
             var backLightObj = GameObject.Find("HCamera/Main Camera/Lights Custom/Directional Light Back");
             if (backLightObj == null)
                 return;
@@ -89,42 +105,97 @@ namespace HS2_HLightControl
             if (orig == null)
                 return;
 
-            AddBtn(back, orig, "Backlight", false, true, delegate(bool value)
-            {
-                if (backLight == null)
-                    return;
-                
-                backLight.enabled = value;
-            });
+            var text = orig.GetComponentInChildren<Text>();
+            text.alignment = TextAnchor.MiddleLeft;
 
-            AddBtn(back, orig, "Lock Camlight", true, false, delegate(bool value)
-            {
-                lockCamLight = value;
+            // Make textbox wider
+            var textRect = text.gameObject.GetComponent<RectTransform>();
+            var oldTeMin = textRect.offsetMin;
+            var oldTeMax = textRect.offsetMax;
+            
+            textRect.offsetMin = new Vector2(95, oldTeMin.y);
+            textRect.offsetMax = new Vector2(315, oldTeMax.y);
+            textRect.sizeDelta = new Vector2(220, 30);
+            
+            var toggle = orig.GetComponentInChildren<Toggle>();
+            
+            // Move toggle to the right
+            var toggleRect = toggle.gameObject.GetComponent<RectTransform>();
+            var oldToMin = toggleRect.offsetMin;
+            var oldToMax = toggleRect.offsetMax;
+            
+            toggleRect.offsetMin = new Vector2(315, oldToMin.y);
+            toggleRect.offsetMax = new Vector2(345, oldToMax.y);
+            toggleRect.sizeDelta = new Vector2(30, 30);
+            
+            lights = FindObjectsOfType<Light>();
+            resolutions = new int[lights.Length];
+            
+            for (var i = 0; i < lights.Length; i++)
+                resolutions[i] = lights[i] != null ? lights[i].shadowCustomResolution : -1;
 
-                if (lockCamLight)
-                {
-                    oldParent = camLightTr.parent.gameObject;
+            AddBtn(back, orig, "Backlight", false, true, btn_BackLight);
+            AddBtn(back, orig, "Lock Camlight", false, false, delegate(bool value) { btn_LockCamLight(value, __instance); });
+            AddBtn(back, orig, "Lower Shadow Resolution", true, false, btn_LowerLightsResolution);
 
-                    newParent = new GameObject("CamLightLock");
-                    newParent.transform.position = oldParent.transform.position;
-                    newParent.transform.eulerAngles = oldParent.transform.eulerAngles;
-
-                    camLightTr.parent = newParent.transform;
-                }
-                else if(oldParent != null)
-                {
-                    camLightTr.parent = oldParent.transform;
-
-                    __instance.ReSetLightDir(0);
-                    __instance.ReSetLightDir(1);
-                    
-                    Destroy(newParent);
-                    newParent = null;
-                }
-            });
+            created = true;
         }
         
         [HarmonyPostfix, HarmonyPatch(typeof(HScene), "EndProc")]
-        public static void HScene_EndProc_Cleanup() => multiplier = 1;
+        public static void HScene_EndProc_Cleanup()
+        {
+            multiplier = 1;
+            created = false;
+            btn_LowerLightsResolution(false);
+        }
+
+        private static void btn_BackLight(bool value)
+        {
+            if (backLight == null)
+                return;
+                
+            backLight.enabled = value;
+        }
+        
+        private static void btn_LockCamLight(bool value, HSceneSprite __instance)
+        {
+            lockCamLight = value;
+            
+            if (lockCamLight)
+            {
+                oldParent = camLightTr.parent.gameObject;
+
+                newParent = new GameObject("CamLightLock");
+                newParent.transform.position = oldParent.transform.position;
+                newParent.transform.eulerAngles = oldParent.transform.eulerAngles;
+
+                camLightTr.parent = newParent.transform;
+            }
+            else if(oldParent != null)
+            {
+                camLightTr.parent = oldParent.transform;
+
+                __instance.ReSetLightDir(0);
+                __instance.ReSetLightDir(1);
+                    
+                Destroy(newParent);
+                newParent = null;
+            }
+        }
+        
+        private static void btn_LowerLightsResolution(bool value)
+        {
+            if (value)
+            {
+                foreach (var t in lights.Where(t => t != null))
+                    t.shadowCustomResolution = customShadowResolution.Value;
+            }
+            else
+            {
+                for (var i = 0; i < lights.Length; i++)
+                    if(lights[i] != null)
+                        lights[i].shadowCustomResolution = resolutions[i];
+            }
+        }
     }
 }
