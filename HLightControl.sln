@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HS2_HLightControl", "HS2_HL
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KK_HLightControl", "KK_HLightControl\KK_HLightControl.csproj", "{039C2074-DB54-4375-8DC4-054B7AAD2FD0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AI_HLightControl", "AI_HLightControl\AI_HLightControl.csproj", "{BACDF052-49CA-453D-A08F-332659FC6FC8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{039C2074-DB54-4375-8DC4-054B7AAD2FD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{039C2074-DB54-4375-8DC4-054B7AAD2FD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{039C2074-DB54-4375-8DC4-054B7AAD2FD0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BACDF052-49CA-453D-A08F-332659FC6FC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BACDF052-49CA-453D-A08F-332659FC6FC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BACDF052-49CA-453D-A08F-332659FC6FC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BACDF052-49CA-453D-A08F-332659FC6FC8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

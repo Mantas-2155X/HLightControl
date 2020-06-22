@@ -17,7 +17,7 @@ namespace KK_HLightControl
     [BepInPlugin(nameof(KK_HLightControl), nameof(KK_HLightControl), VERSION)]
     public class KK_HLightControl : BaseUnityPlugin
     {
-        public const string VERSION = "1.1.0";
+        public const string VERSION = "1.1.1";
         
         private static Transform camLightTr;
 
