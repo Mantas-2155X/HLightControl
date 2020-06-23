@@ -12,6 +12,7 @@ using UnityEngine.Events;
 
 namespace HS2_HLightControl
 {
+    [BepInProcess("HoneySelect2")]
     [BepInPlugin(nameof(HS2_HLightControl), nameof(HS2_HLightControl), VERSION)]
     public class HS2_HLightControl : BaseUnityPlugin
     {

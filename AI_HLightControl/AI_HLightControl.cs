@@ -14,6 +14,7 @@ using UnityEx;
 
 namespace AI_HLightControl
 {
+    [BepInProcess("AI-Syoujyo")]
     [BepInPlugin(nameof(AI_HLightControl), nameof(AI_HLightControl), VERSION)]
     public class AI_HLightControl : BaseUnityPlugin
     {

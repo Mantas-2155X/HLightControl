@@ -15,6 +15,7 @@ using UnityEngine.Events;
 
 namespace KK_HLightControl
 {
+    [BepInProcess("Koikatu")]
     [BepInPlugin(nameof(KK_HLightControl), nameof(KK_HLightControl), VERSION)]
     public class KK_HLightControl : BaseUnityPlugin
     {
