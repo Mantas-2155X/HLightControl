@@ -87,6 +87,8 @@ namespace KK_HLightControl
                 
                 child.localPosition = new Vector3(oldpos.x + 10, oldpos.y - 4, oldpos.z);
             }
+            
+            toggles.Add(toggle);
         }
         
         [HarmonyPostfix, HarmonyPatch(typeof(HSprite), "OnMainMenu")]
@@ -96,6 +98,8 @@ namespace KK_HLightControl
             
             if (created)
                 return;
+            
+            toggles = new List<Toggle>();
 
             var camLightObj = GameObject.Find("HScene/CameraBase/Camera/Directional Light");
             if (camLightObj == null)

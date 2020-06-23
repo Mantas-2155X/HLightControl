@@ -81,6 +81,8 @@ namespace HS2_HLightControl
 
             BackRect.sizeDelta = new Vector2(oldSize.x, oldSize.y + 30);
 
+            toggles.Add(toggle);
+            
             multiplier++;
         }
         

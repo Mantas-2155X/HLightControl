@@ -131,7 +131,9 @@ namespace AI_HLightControl
 
             oldParents = new GameObject[2];
             newParents = new GameObject[2];
-            
+
+            toggles?.Clear();
+
             toggles = new List<Toggle>();
             
             var maproot = GameObject.Find("CommonSpace/MapRoot");
@@ -218,9 +220,6 @@ namespace AI_HLightControl
 
             for (var i = 0; i < toggles.Count; i++)
                 toggles[i].isOn = toggleInfo[i].toggled;
-
-            toggles.Clear();
-            toggles = null;
         }
 
         private static void btn_BackLight(bool value)
