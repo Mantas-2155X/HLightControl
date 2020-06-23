@@ -6,7 +6,7 @@ This plugin allows you to change some light settings during H
 **Current Features:**  
 * Freeze camera light  
 * Lower shadow resolution (1-15FPS boost)  
-* [HS2] Disable backlight (3-7FPS boost)  
+* Disable backlight (3-7FPS boost)  
 
 **Usage:**  
 * Open the built-in light UI in H  
