@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 using BepInEx;
 using BepInEx.Configuration;
@@ -17,7 +18,9 @@ namespace KK_HLightControl
     [BepInPlugin(nameof(KK_HLightControl), nameof(KK_HLightControl), VERSION)]
     public class KK_HLightControl : BaseUnityPlugin
     {
-        public const string VERSION = "1.1.1";
+        public const string VERSION = "1.1.2";
+        
+        private static HSprite sprite;
         
         private static Transform camLightTr;
 
@@ -29,6 +32,13 @@ namespace KK_HLightControl
         
         private static Light[] lights;
         private static int[] resolutions;
+        
+        private static List<Toggle> toggles;
+        private static readonly List<NewToggleInfo> toggleInfo = new List<NewToggleInfo>()
+        {
+            new NewToggleInfo("Lock Camlight", false, false, btn_LockCamLight),
+            new NewToggleInfo("Lower Shadow Resolution", true, false, btn_LowerLightsResolution)
+        };
         
         private static ConfigEntry<int> customShadowResolution { get; set; }
         
@@ -82,6 +92,8 @@ namespace KK_HLightControl
         [HarmonyPostfix, HarmonyPatch(typeof(HSprite), "OnMainMenu")]
         public static void HSprite_OnMainMenu_CreateButtons(HSprite __instance)
         {
+            sprite = __instance;
+            
             if (created)
                 return;
 
@@ -109,8 +121,8 @@ namespace KK_HLightControl
             for (var i = 0; i < lights.Length; i++)
                 resolutions[i] = lights[i] != null ? lights[i].shadowCustomResolution : -1;
             
-            AddBtn(back, orig, "Lock Camlight", false, false, delegate(bool value) { btn_LockCamLight(value, __instance); });
-            AddBtn(back, orig, "Lower Shadow Resolution", true, false, btn_LowerLightsResolution);
+            foreach (var toggle in toggleInfo)
+                AddBtn(back, orig, toggle.name, toggle.resize, toggle.toggled, toggle.clickEvent);
 
             created = true;
         }
@@ -119,10 +131,15 @@ namespace KK_HLightControl
         public static void HSceneProc_EndProc_Cleanup()
         {
             created = false;
-            btn_LowerLightsResolution(false);
+            
+            for (var i = 0; i < toggles.Count; i++)
+                toggles[i].isOn = toggleInfo[i].toggled;
+
+            toggles.Clear();
+            toggles = null;
         }
 
-        private static void btn_LockCamLight(bool value, HSprite __instance)
+        private static void btn_LockCamLight(bool value)
         {
             lockCamLight = value;
 
@@ -140,8 +157,8 @@ namespace KK_HLightControl
             {
                 camLightTr.parent = oldParent.transform;
 
-                __instance.OnClickLightDirInit(0);
-                __instance.OnClickLightDirInit(1);
+                sprite.OnClickLightDirInit(0);
+                sprite.OnClickLightDirInit(1);
                
                 Destroy(newParent);
                 newParent = null;
@@ -163,6 +180,24 @@ namespace KK_HLightControl
                     if(lights[i] != null)
                         lights[i].shadowCustomResolution = resolutions[i];
             }
+        }
+    }
+    
+    public class NewToggleInfo
+    {
+        public readonly string name;
+        
+        public readonly bool resize;
+        public readonly bool toggled;
+        
+        public readonly UnityAction<bool> clickEvent;
+
+        public NewToggleInfo(string _name, bool _resize, bool _toggled, UnityAction<bool> _clickEvent)
+        {
+            name = _name;
+            resize = _resize;
+            toggled = _toggled;
+            clickEvent = _clickEvent;
         }
     }
 }

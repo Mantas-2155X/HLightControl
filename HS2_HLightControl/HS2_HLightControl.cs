@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 using BepInEx;
 using BepInEx.Configuration;
@@ -14,9 +15,11 @@ namespace HS2_HLightControl
     [BepInPlugin(nameof(HS2_HLightControl), nameof(HS2_HLightControl), VERSION)]
     public class HS2_HLightControl : BaseUnityPlugin
     {
-        public const string VERSION = "1.1.1";
+        public const string VERSION = "1.1.2";
 
         private static int multiplier = 1;
+        
+        private static HSceneSprite sprite;
         
         private static Light backLight;
         private static Transform camLightTr;
@@ -29,6 +32,14 @@ namespace HS2_HLightControl
 
         private static Light[] lights;
         private static int[] resolutions;
+        
+        private static List<Toggle> toggles;
+        private static readonly List<NewToggleInfo> toggleInfo = new List<NewToggleInfo>()
+        {
+            new NewToggleInfo("Backlight", false, true, btn_BackLight),
+            new NewToggleInfo("Lock Camlight", false, false, btn_LockCamLight),
+            new NewToggleInfo("Lower Shadow Resolution", true, false, btn_LowerLightsResolution)
+        };
         
         private static ConfigEntry<int> customShadowResolution { get; set; }
 
@@ -76,8 +87,12 @@ namespace HS2_HLightControl
         [HarmonyPostfix, HarmonyPatch(typeof(HSceneSprite), "SetSelectSlider")]
         public static void HSceneSprite_SetSelectSlider_CreateButtons(HSceneSprite __instance)
         {
+            sprite = __instance;
+            
             if (created)
                 return;
+            
+            toggles = new List<Toggle>();
             
             var backLightObj = GameObject.Find("HCamera/Main Camera/Lights Custom/Directional Light Back");
             if (backLightObj == null)
@@ -117,10 +132,10 @@ namespace HS2_HLightControl
             textRect.offsetMax = new Vector2(348, oldTeMax.y);
             textRect.sizeDelta = new Vector2(220, 30);
             
-            var toggle = orig.GetComponentInChildren<Toggle>();
+            var toggleComp = orig.GetComponentInChildren<Toggle>();
             
             // Move toggle to the left
-            var toggleRect = toggle.gameObject.GetComponent<RectTransform>();
+            var toggleRect = toggleComp.gameObject.GetComponent<RectTransform>();
             var oldToMin = toggleRect.offsetMin;
             var oldToMax = toggleRect.offsetMax;
             
@@ -134,9 +149,8 @@ namespace HS2_HLightControl
             for (var i = 0; i < lights.Length; i++)
                 resolutions[i] = lights[i] != null ? lights[i].shadowCustomResolution : -1;
 
-            AddBtn(back, orig, "Backlight", false, true, btn_BackLight);
-            AddBtn(back, orig, "Lock Camlight", false, false, delegate(bool value) { btn_LockCamLight(value, __instance); });
-            AddBtn(back, orig, "Lower Shadow Resolution", true, false, btn_LowerLightsResolution);
+            foreach (var toggle in toggleInfo)
+                AddBtn(back, orig, toggle.name, toggle.resize, toggle.toggled, toggle.clickEvent);
 
             created = true;
         }
@@ -146,7 +160,12 @@ namespace HS2_HLightControl
         {
             multiplier = 1;
             created = false;
-            btn_LowerLightsResolution(false);
+            
+            for (var i = 0; i < toggles.Count; i++)
+                toggles[i].isOn = toggleInfo[i].toggled;
+
+            toggles.Clear();
+            toggles = null;
         }
 
         private static void btn_BackLight(bool value)
@@ -157,7 +176,7 @@ namespace HS2_HLightControl
             backLight.enabled = value;
         }
         
-        private static void btn_LockCamLight(bool value, HSceneSprite __instance)
+        private static void btn_LockCamLight(bool value)
         {
             lockCamLight = value;
             
@@ -175,8 +194,8 @@ namespace HS2_HLightControl
             {
                 camLightTr.parent = oldParent.transform;
 
-                __instance.ReSetLightDir(0);
-                __instance.ReSetLightDir(1);
+                sprite.ReSetLightDir(0);
+                sprite.ReSetLightDir(1);
                     
                 Destroy(newParent);
                 newParent = null;
@@ -196,6 +215,24 @@ namespace HS2_HLightControl
                     if(lights[i] != null)
                         lights[i].shadowCustomResolution = resolutions[i];
             }
+        }
+    }
+    
+    public class NewToggleInfo
+    {
+        public readonly string name;
+        
+        public readonly bool resize;
+        public readonly bool toggled;
+        
+        public readonly UnityAction<bool> clickEvent;
+
+        public NewToggleInfo(string _name, bool _resize, bool _toggled, UnityAction<bool> _clickEvent)
+        {
+            name = _name;
+            resize = _resize;
+            toggled = _toggled;
+            clickEvent = _clickEvent;
         }
     }
 }
