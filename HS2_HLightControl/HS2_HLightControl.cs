@@ -96,21 +96,28 @@ namespace HS2_HLightControl
                 return;
             
             toggles = new List<Toggle>();
-            
-            var backLightObj = GameObject.Find("HCamera/Main Camera/Lights Custom/Directional Light Back");
-            if (backLightObj == null)
-                return;
-            
-            var camLightObj = GameObject.Find("HCamera/Main Camera/Lights Custom/Directional Light Key");
-            if (camLightObj == null)
-                return;
 
-            camLightTr = camLightObj.transform;
+            lights = Resources.FindObjectsOfTypeAll<Light>();
+            resolutions = new int[lights.Length];
             
-            backLight = backLightObj.GetComponent<Light>();
-            if (backLight == null)
-                return;
+            for (var i = 0; i < lights.Length; i++)
+                resolutions[i] = lights[i] != null ? lights[i].shadowCustomResolution : -1;
 
+            foreach (var light in lights)
+            {
+                var parent = light.transform;
+
+                switch (parent.name)
+                {
+                    case "Directional Light Key":
+                        camLightTr = parent;
+                        break;
+                    case "Directional Light Back":
+                        backLight = light;
+                        break;
+                }
+            }
+            
             var UI = GameObject.Find("UI");
             if (UI == null)
                 return;
@@ -146,12 +153,6 @@ namespace HS2_HLightControl
             toggleRect.offsetMax = new Vector2(128, oldToMax.y);
             toggleRect.sizeDelta = new Vector2(30, 30);
             
-            lights = FindObjectsOfType<Light>();
-            resolutions = new int[lights.Length];
-            
-            for (var i = 0; i < lights.Length; i++)
-                resolutions[i] = lights[i] != null ? lights[i].shadowCustomResolution : -1;
-
             foreach (var toggle in toggleInfo)
                 AddBtn(back, orig, toggle.name, toggle.resize, toggle.toggled, toggle.clickEvent);
 
@@ -182,6 +183,9 @@ namespace HS2_HLightControl
         private static void btn_LockCamLight(bool value)
         {
             lockCamLight = value;
+
+            if (camLightTr == null)
+                return;
             
             if (lockCamLight)
             {

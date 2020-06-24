@@ -101,13 +101,25 @@ namespace KK_HLightControl
                 return;
             
             toggles = new List<Toggle>();
-
-            var camLightObj = GameObject.Find("HScene/CameraBase/Camera/Directional Light");
-            if (camLightObj == null)
-                return;
             
-            camLightTr = camLightObj.transform;
+            lights = FindObjectsOfType<Light>();
+            resolutions = new int[lights.Length];
+            
+            for (var i = 0; i < lights.Length; i++)
+                resolutions[i] = lights[i] != null ? lights[i].shadowCustomResolution : -1;
+            
+            foreach (var light in lights)
+            {
+                var parent = light.transform;
 
+                switch (parent.name)
+                {
+                    case "Directional Light":
+                        camLightTr = parent;
+                        break;
+                }
+            }
+            
             var Canvas = GameObject.Find("Canvas");
             if (Canvas == null)
                 return;
@@ -120,12 +132,6 @@ namespace KK_HLightControl
             if (orig == null)
                 return;
 
-            lights = FindObjectsOfType<Light>();
-            resolutions = new int[lights.Length];
-            
-            for (var i = 0; i < lights.Length; i++)
-                resolutions[i] = lights[i] != null ? lights[i].shadowCustomResolution : -1;
-            
             foreach (var toggle in toggleInfo)
                 AddBtn(back, orig, toggle.name, toggle.resize, toggle.toggled, toggle.clickEvent);
 

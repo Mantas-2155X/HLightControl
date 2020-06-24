@@ -25,7 +25,8 @@ namespace AI_HLightControl
         private static HSceneSprite sprite;
         private static GameObject Content;
         
-        private static Light[] backLights;
+        private static List<Light> backLights;
+        private static List<Light> auxLights;
         private static Transform[] camLightTrs;
 
         private static GameObject[] oldParents;
@@ -41,6 +42,7 @@ namespace AI_HLightControl
         private static readonly List<NewToggleInfo> toggleInfo = new List<NewToggleInfo>()
         {
             new NewToggleInfo("Backlight", false, true, btn_BackLight),
+            new NewToggleInfo("Auxiliary", false, true, btn_Auxiliary),
             new NewToggleInfo("Lock Camlight", false, false, btn_LockCamLight),
             new NewToggleInfo("Lower Shadow Resolution", true, false, btn_LowerLightsResolution)
         };
@@ -126,10 +128,7 @@ namespace AI_HLightControl
             
             if (created)
                 return;
-
-            backLights = new Light[2];
-            camLightTrs = new Transform[2];
-
+            
             oldParents = new GameObject[2];
             newParents = new GameObject[2];
 
@@ -137,23 +136,46 @@ namespace AI_HLightControl
 
             toggles = new List<Toggle>();
             
-            var maproot = GameObject.Find("CommonSpace/MapRoot");
-
-            var firstbl = maproot.transform.Find("SpawnPoint/Player(Clone)/ActorCamera(Clone)/MainCamera/N_light custom/Directional Light Back");
-            if (firstbl != null)
-                backLights[0] = firstbl.GetComponent<Light>();
-
-            var secondbl = maproot.transform.Find("SpawnPoint/Player(Clone)/ActorCamera(Clone)/MainCamera/N_light/Back Light");
-            if (secondbl != null)
-                backLights[1] = secondbl.GetComponent<Light>();
-            
-            camLightTrs[0] = maproot.transform.Find("SpawnPoint/Player(Clone)/ActorCamera(Clone)/MainCamera/N_light custom/Directional Light Key");
-            camLightTrs[1] = maproot.transform.Find("SpawnPoint/Player(Clone)/ActorCamera(Clone)/MainCamera/N_light/Cam Light");
-
             var UI = GameObject.Find("CommonSpace/HSceneUISet");
+            
             var Btn = UI.transform.Find("Canvas/CanvasGroup/Panel/CoordinatesCard/SortPanel/SortCategory/Name");
             var LightAdj = UI.transform.Find("Canvas/CanvasGroup/LightCategory/BG/LightAdjustment");
+            
+            // Lights
+            camLightTrs = new Transform[2];
+            backLights = new List<Light>();
+            auxLights = new List<Light>();
+            
+            lights = Resources.FindObjectsOfTypeAll<Light>();
+            resolutions = new int[lights.Length];
+            
+            for (var i = 0; i < lights.Length; i++)
+                resolutions[i] = lights[i] != null ? lights[i].shadowCustomResolution : -1;
 
+            foreach (var light in lights)
+            {
+                var parent = light.transform;
+
+                switch (parent.name)
+                {
+                    case "Directional Light Key":
+                        camLightTrs[0] = parent;
+                        break;
+                    case "Cam Light":
+                        camLightTrs[1] = parent;
+                        break;
+                    case "Directional Light Back":
+                    case "Back Light":
+                        backLights.Add(light);
+                        break;
+                    case "Directional Light Fill":
+                    case "Directional Light Top":
+                        auxLights.Add(light);
+                        break;
+                }
+            }
+            
+            // Set up panel for new buttons and insert them
             Content = new GameObject("Content", typeof(RectTransform));
             Content.transform.SetParent(LightAdj, false);
             
@@ -196,12 +218,6 @@ namespace AI_HLightControl
             crt.offsetMax = new Vector2(85, 15);
             crt.sizeDelta = new Vector2(170, 0);
 
-            lights = FindObjectsOfType<Light>();
-            resolutions = new int[lights.Length];
-            
-            for (var i = 0; i < lights.Length; i++)
-                resolutions[i] = lights[i] != null ? lights[i].shadowCustomResolution : -1;
-
             foreach (var toggle in toggleInfo)
                 AddBtn(Content.transform, Btn, toggle.name, toggle.resize, toggle.toggled, toggle.clickEvent);
 
@@ -225,10 +241,13 @@ namespace AI_HLightControl
 
         private static void btn_BackLight(bool value)
         {
-            if (backLights == null)
-                return;
-
             foreach (var light in backLights.Where(light => light != null))
+                light.enabled = value;
+        }
+        
+        private static void btn_Auxiliary(bool value)
+        {
+            foreach (var light in auxLights.Where(light => light != null))
                 light.enabled = value;
         }
         
@@ -240,6 +259,9 @@ namespace AI_HLightControl
             {
                 for (var i = 0; i < camLightTrs.Length; i++)
                 {
+                    if(camLightTrs[i] == null)
+                        continue;
+                    
                     oldParents[i] = camLightTrs[i].parent.gameObject;
 
                     newParents[i] = new GameObject("CamLightLock");
@@ -255,7 +277,7 @@ namespace AI_HLightControl
             
             for (var i = 0; i < camLightTrs.Length; i++)
             {
-                if (oldParents[i] == null) 
+                if (oldParents[i] == null || camLightTrs[i] == null) 
                     continue;
                 
                 camLightTrs[i].parent = oldParents[i].transform;
