@@ -142,12 +142,15 @@ namespace KK_HLightControl
         public static void HSceneProc_EndProc_Cleanup()
         {
             created = false;
-            
-            for (var i = 0; i < toggles.Count; i++)
-                toggles[i].isOn = toggleInfo[i].toggled;
 
-            toggles.Clear();
-            toggles = null;
+            if (toggles != null)
+            {
+                for (var i = 0; i < toggles.Count; i++)
+                    toggles[i].isOn = toggleInfo[i].toggled;
+
+                toggles.Clear();
+                toggles = null;
+            }
         }
 
         private static void btn_LockCamLight(bool value)

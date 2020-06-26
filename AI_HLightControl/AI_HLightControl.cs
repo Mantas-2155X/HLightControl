@@ -235,8 +235,11 @@ namespace AI_HLightControl
             multiplier = 1;
             created = false;
 
-            for (var i = 0; i < toggles.Count; i++)
-                toggles[i].isOn = toggleInfo[i].toggled;
+            if (toggles != null)
+            {
+                for (var i = 0; i < toggles.Count; i++)
+                    toggles[i].isOn = toggleInfo[i].toggled;
+            }
         }
 
         private static void btn_BackLight(bool value)
