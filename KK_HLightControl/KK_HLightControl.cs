@@ -46,8 +46,9 @@ namespace KK_HLightControl
         private void Awake()
         {
             customShadowResolution = Config.Bind("General", "Shadow resolution target", 1024, new ConfigDescription("What resolution to apply when clicking 'Lower shadow resolution'"));
-
-            Harmony.CreateAndPatchAll(typeof(KK_HLightControl));
+            
+            var harmony = new Harmony(nameof(KK_HLightControl));
+            harmony.PatchAll(typeof(KK_HLightControl));
         }
 
         private static void AddBtn(Transform background, Transform source, string name, bool resize, bool toggled, UnityAction<bool> clickEvent)

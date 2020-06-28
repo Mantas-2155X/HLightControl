@@ -53,7 +53,8 @@ namespace AI_HLightControl
         {
             customShadowResolution = Config.Bind("General", "Shadow resolution target", 1024, new ConfigDescription("What resolution to apply when clicking 'Lower shadow resolution'"));
 
-            Harmony.CreateAndPatchAll(typeof(AI_HLightControl));
+            var harmony = new Harmony(nameof(AI_HLightControl));
+            harmony.PatchAll(typeof(AI_HLightControl));
         }
 
         private static void AddBtn(Transform content, Transform source, string name, bool resize, bool toggled, UnityAction<bool> clickEvent)

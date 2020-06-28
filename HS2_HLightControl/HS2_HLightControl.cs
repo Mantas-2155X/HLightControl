@@ -48,7 +48,8 @@ namespace HS2_HLightControl
         {
             customShadowResolution = Config.Bind("General", "Shadow resolution target", 1024, new ConfigDescription("What resolution to apply when clicking 'Lower shadow resolution'"));
 
-            Harmony.CreateAndPatchAll(typeof(HS2_HLightControl));
+            var harmony = new Harmony(nameof(HS2_HLightControl));
+            harmony.PatchAll(typeof(HS2_HLightControl));
         }
 
         private static void AddBtn(Transform background, Transform source, string name, bool resize, bool toggled, UnityAction<bool> clickEvent)
