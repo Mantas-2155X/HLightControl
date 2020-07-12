@@ -16,7 +16,7 @@ namespace HS2_HLightControl
     [BepInPlugin(nameof(HS2_HLightControl), nameof(HS2_HLightControl), VERSION)]
     public class HS2_HLightControl : BaseUnityPlugin
     {
-        public const string VERSION = "1.2.0";
+        public const string VERSION = "1.2.1";
 
         private static int multiplier = 1;
         
@@ -174,6 +174,19 @@ namespace HS2_HLightControl
                 toggles.Clear();
                 toggles = null;
             }
+        }
+        
+        [HarmonyPostfix, HarmonyPatch(typeof(HColorPickerCtrl), "Open")]
+        public static void HColorPickerCtrl_Open_AdjustColorPnl(HColorPickerCtrl __instance)
+        {
+            var colorPnl = __instance.transform;
+            var cRect = colorPnl.GetComponent<RectTransform>();
+
+            var oCMin = cRect.offsetMin;
+            var oCMax = cRect.offsetMax;
+            
+            cRect.offsetMin = new Vector2(oCMin.x, oCMin.y - 30 * (multiplier - 1));
+            cRect.offsetMax = new Vector2(oCMax.x, oCMax.y - 30 * (multiplier - 1));
         }
 
         private static void btn_BackLight(bool value)
