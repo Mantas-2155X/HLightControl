@@ -11,6 +11,7 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 
 using UnityEx;
+using Resources = UnityEngine.Resources;
 
 namespace AI_HLightControl
 {
@@ -18,7 +19,7 @@ namespace AI_HLightControl
     [BepInPlugin(nameof(AI_HLightControl), nameof(AI_HLightControl), VERSION)]
     public class AI_HLightControl : BaseUnityPlugin
     {
-        public const string VERSION = "1.2.1";
+        public const string VERSION = "1.2.2";
 
         private static int multiplier = 1;
 
@@ -47,17 +48,37 @@ namespace AI_HLightControl
             new NewToggleInfo("Lower Shadow Resolution", true, false, btn_LowerLightsResolution)
         };
         
+        private static readonly List<ConfigEntry<bool>> btn = new List<ConfigEntry<bool>>();
+
         private static ConfigEntry<int> customShadowResolution { get; set; }
 
         private void Awake()
         {
             customShadowResolution = Config.Bind("General", "Shadow resolution target", 1024, new ConfigDescription("What resolution to apply when clicking 'Lower shadow resolution'"));
 
+            btn.Clear();
+            
+            foreach (var t in toggleInfo)
+                btn.Add(Config.Bind("Defaults", t.name, t.toggled));
+
+            for (var i = 0; i < toggleInfo.Count; i++)
+            {
+                var index = i;
+                
+                btn[i].SettingChanged += delegate
+                {
+                    if (!created || toggles == null || toggles.Count <= index || toggles[index] == null)
+                        return;
+                    
+                    toggles[index].isOn = btn[index].Value;
+                };
+            }
+            
             var harmony = new Harmony(nameof(AI_HLightControl));
             harmony.PatchAll(typeof(AI_HLightControl));
         }
 
-        private static void AddBtn(Transform content, Transform source, string name, bool resize, bool toggled, UnityAction<bool> clickEvent)
+        private static void AddBtn(Transform content, Transform source, string name, bool resize, UnityAction<bool> clickEvent)
         {
             // Set names for object and text
             var copy = Instantiate(source.gameObject, content);
@@ -105,8 +126,9 @@ namespace AI_HLightControl
             
             toggle.onValueChanged.AddListener(clickEvent);
             toggle.onValueChanged.AddListener((state) => { imageComp.enabled = state; });
-            
-            toggle.isOn = toggled;
+
+            foreach (var b in btn.Where(b => name == b.Definition.Key))
+                toggle.isOn = b.Value;
 
             // Lower the position
             var newRect = copy.GetComponent<RectTransform>();
@@ -220,7 +242,7 @@ namespace AI_HLightControl
             crt.sizeDelta = new Vector2(170, 0);
 
             foreach (var toggle in toggleInfo)
-                AddBtn(Content.transform, Btn, toggle.name, toggle.resize, toggle.toggled, toggle.clickEvent);
+                AddBtn(Content.transform, Btn, toggle.name, toggle.resize, toggle.clickEvent);
 
             var csf = Content.AddComponent<ContentSizeFitter>();
             csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;

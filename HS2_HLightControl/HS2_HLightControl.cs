@@ -9,6 +9,7 @@ using HarmonyLib;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
+using Resources = UnityEngine.Resources;
 
 namespace HS2_HLightControl
 {
@@ -16,7 +17,7 @@ namespace HS2_HLightControl
     [BepInPlugin(nameof(HS2_HLightControl), nameof(HS2_HLightControl), VERSION)]
     public class HS2_HLightControl : BaseUnityPlugin
     {
-        public const string VERSION = "1.2.1";
+        public const string VERSION = "1.2.2";
 
         private static int multiplier = 1;
         
@@ -42,17 +43,37 @@ namespace HS2_HLightControl
             new NewToggleInfo("Lower Shadow Resolution", true, false, btn_LowerLightsResolution)
         };
         
+        private static readonly List<ConfigEntry<bool>> btn = new List<ConfigEntry<bool>>();
+
         private static ConfigEntry<int> customShadowResolution { get; set; }
 
         private void Awake()
         {
             customShadowResolution = Config.Bind("General", "Shadow resolution target", 1024, new ConfigDescription("What resolution to apply when clicking 'Lower shadow resolution'"));
 
+            btn.Clear();
+            
+            foreach (var t in toggleInfo)
+                btn.Add(Config.Bind("Defaults", t.name, t.toggled));
+
+            for (var i = 0; i < toggleInfo.Count; i++)
+            {
+                var index = i;
+                
+                btn[i].SettingChanged += delegate
+                {
+                    if (!created || toggles == null || toggles.Count <= index || toggles[index] == null)
+                        return;
+                    
+                    toggles[index].isOn = btn[index].Value;
+                };
+            }
+            
             var harmony = new Harmony(nameof(HS2_HLightControl));
             harmony.PatchAll(typeof(HS2_HLightControl));
         }
 
-        private static void AddBtn(Transform background, Transform source, string name, bool resize, bool toggled, UnityAction<bool> clickEvent)
+        private static void AddBtn(Transform background, Transform source, string name, bool resize, UnityAction<bool> clickEvent)
         {
             // Set names for object and text
             var copy = Instantiate(source.gameObject, source.parent);
@@ -65,8 +86,10 @@ namespace HS2_HLightControl
             // Clear listeners and add own custom event
             var toggle = copy.GetComponentInChildren<Toggle>();
             toggle.onValueChanged.RemoveAllListeners();
-            toggle.isOn = toggled;
-
+            
+            foreach (var b in btn.Where(b => name == b.Definition.Key))
+                toggle.isOn = b.Value;
+            
             toggle.onValueChanged.AddListener(clickEvent);
 
             // Lower the position
@@ -155,7 +178,7 @@ namespace HS2_HLightControl
             toggleRect.sizeDelta = new Vector2(30, 30);
             
             foreach (var toggle in toggleInfo)
-                AddBtn(back, orig, toggle.name, toggle.resize, toggle.toggled, toggle.clickEvent);
+                AddBtn(back, orig, toggle.name, toggle.resize, toggle.clickEvent);
 
             created = true;
         }

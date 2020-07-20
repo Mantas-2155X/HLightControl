@@ -19,7 +19,7 @@ namespace KK_HLightControl
     [BepInPlugin(nameof(KK_HLightControl), nameof(KK_HLightControl), VERSION)]
     public class KK_HLightControl : BaseUnityPlugin
     {
-        public const string VERSION = "1.2.1";
+        public const string VERSION = "1.2.2";
         
         private static HSprite sprite;
         
@@ -41,17 +41,37 @@ namespace KK_HLightControl
             new NewToggleInfo("Lower Shadow Resolution", true, false, btn_LowerLightsResolution)
         };
         
+        private static readonly List<ConfigEntry<bool>> btn = new List<ConfigEntry<bool>>();
+
         private static ConfigEntry<int> customShadowResolution { get; set; }
         
         private void Awake()
         {
             customShadowResolution = Config.Bind("General", "Shadow resolution target", 1024, new ConfigDescription("What resolution to apply when clicking 'Lower shadow resolution'"));
             
+            btn.Clear();
+            
+            foreach (var t in toggleInfo)
+                btn.Add(Config.Bind("Defaults", t.name, t.toggled));
+
+            for (var i = 0; i < toggleInfo.Count; i++)
+            {
+                var index = i;
+                
+                btn[i].SettingChanged += delegate
+                {
+                    if (!created || toggles == null || toggles.Count <= index || toggles[index] == null)
+                        return;
+                    
+                    toggles[index].isOn = btn[index].Value;
+                };
+            }
+            
             var harmony = new Harmony(nameof(KK_HLightControl));
             harmony.PatchAll(typeof(KK_HLightControl));
         }
 
-        private static void AddBtn(Transform background, Transform source, string name, bool resize, bool toggled, UnityAction<bool> clickEvent)
+        private static void AddBtn(Transform background, Transform source, string name, bool resize, UnityAction<bool> clickEvent)
         {
             // Set names for object and text
             var copy = Instantiate(source.gameObject, background);
@@ -68,8 +88,6 @@ namespace KK_HLightControl
                 toggle.onValueChanged.SetPersistentListenerState(i, UnityEventCallState.Off);
             
             toggle.onValueChanged.RemoveAllListeners();
-            toggle.isOn = toggled;
-
             toggle.onValueChanged.AddListener(clickEvent);
 
             // Align position
@@ -91,6 +109,9 @@ namespace KK_HLightControl
             }
             
             toggles.Add(toggle);
+            
+            foreach (var b in btn.Where(b => name == b.Definition.Key))
+                toggle.isOn = b.Value;
         }
         
         [HarmonyPostfix, HarmonyPatch(typeof(HSprite), "OnMainMenu")]
@@ -134,7 +155,7 @@ namespace KK_HLightControl
                 return;
 
             foreach (var toggle in toggleInfo)
-                AddBtn(back, orig, toggle.name, toggle.resize, toggle.toggled, toggle.clickEvent);
+                AddBtn(back, orig, toggle.name, toggle.resize, toggle.clickEvent);
 
             created = true;
         }
