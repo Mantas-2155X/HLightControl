@@ -86,10 +86,10 @@ namespace HS2_HLightControl
             // Clear listeners and add own custom event
             var toggle = copy.GetComponentInChildren<Toggle>();
             toggle.onValueChanged.RemoveAllListeners();
-            
+
             foreach (var b in btn.Where(b => name == b.Definition.Key))
-                toggle.isOn = b.Value;
-            
+                toggle.isOn = !b.Value;
+
             toggle.onValueChanged.AddListener(clickEvent);
 
             // Lower the position
@@ -107,18 +107,33 @@ namespace HS2_HLightControl
             BackRect.sizeDelta = new Vector2(oldSize.x, oldSize.y + 30);
 
             toggles.Add(toggle);
+
+            foreach (var b in btn.Where(b => name == b.Definition.Key))
+                toggle.isOn = b.Value;
             
             multiplier++;
         }
         
-        [HarmonyPostfix, HarmonyPatch(typeof(HSceneSprite), "SetSelectSlider")]
-        public static void HSceneSprite_SetSelectSlider_CreateButtons(HSceneSprite __instance)
+        [HarmonyPostfix, HarmonyPatch(typeof(HSceneSprite), "SetLightInfo")]
+        public static void HSceneSprite_SetLightInfo_CreateButtons(HSceneSprite __instance)
         {
             sprite = __instance;
             
             if (created)
                 return;
             
+            var UI = GameObject.Find("UI");
+            if (UI == null)
+                return;
+            
+            var back = UI.transform.Find("Light/back");
+            if (back == null)
+                return;
+            
+            var orig = UI.transform.Find("Light/SubLight");
+            if (orig == null)
+                return;
+
             toggles = new List<Toggle>();
 
             lights = Resources.FindObjectsOfTypeAll<Light>();
@@ -142,18 +157,6 @@ namespace HS2_HLightControl
                 }
             }
             
-            var UI = GameObject.Find("UI");
-            if (UI == null)
-                return;
-            
-            var back = UI.transform.Find("Light/back");
-            if (back == null)
-                return;
-            
-            var orig = UI.transform.Find("Light/SubLight");
-            if (orig == null)
-                return;
-
             var text = orig.GetComponentInChildren<Text>();
             text.alignment = TextAnchor.MiddleLeft;
 
@@ -226,7 +229,7 @@ namespace HS2_HLightControl
 
             if (camLightTr == null)
                 return;
-            
+
             if (lockCamLight)
             {
                 oldParent = camLightTr.parent.gameObject;

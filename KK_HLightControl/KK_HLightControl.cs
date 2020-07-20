@@ -16,6 +16,7 @@ using UnityEngine.Events;
 namespace KK_HLightControl
 {
     [BepInProcess("Koikatu")]
+    [BepInProcess("Koikatsu Party")]
     [BepInPlugin(nameof(KK_HLightControl), nameof(KK_HLightControl), VERSION)]
     public class KK_HLightControl : BaseUnityPlugin
     {
@@ -88,6 +89,10 @@ namespace KK_HLightControl
                 toggle.onValueChanged.SetPersistentListenerState(i, UnityEventCallState.Off);
             
             toggle.onValueChanged.RemoveAllListeners();
+            
+            foreach (var b in btn.Where(b => name == b.Definition.Key))
+                toggle.isOn = !b.Value;
+            
             toggle.onValueChanged.AddListener(clickEvent);
 
             // Align position
@@ -114,12 +119,24 @@ namespace KK_HLightControl
                 toggle.isOn = b.Value;
         }
         
-        [HarmonyPostfix, HarmonyPatch(typeof(HSprite), "OnMainMenu")]
-        public static void HSprite_OnMainMenu_CreateButtons(HSprite __instance)
+        [HarmonyPostfix, HarmonyPatch(typeof(HSprite), "SetLightData")]
+        public static void HSprite_SetLightData_CreateButtons(HSprite __instance)
         {
             sprite = __instance;
             
             if (created)
+                return;
+            
+            var Canvas = __instance.transform;
+            if (Canvas == null)
+                return;
+            
+            var back = Canvas.Find("SubMenu/LightGroup/light");
+            if (back == null)
+                return;
+            
+            var orig = Canvas.Find("SubMenu/MoveGroup/move/Toggle");
+            if (orig == null)
                 return;
             
             toggles = new List<Toggle>();
@@ -141,18 +158,6 @@ namespace KK_HLightControl
                         break;
                 }
             }
-            
-            var Canvas = GameObject.Find("Canvas");
-            if (Canvas == null)
-                return;
-            
-            var back = Canvas.transform.Find("SubMenu/LightGroup/light");
-            if (back == null)
-                return;
-            
-            var orig = Canvas.transform.Find("SubMenu/MoveGroup/move/Toggle");
-            if (orig == null)
-                return;
 
             foreach (var toggle in toggleInfo)
                 AddBtn(back, orig, toggle.name, toggle.resize, toggle.clickEvent);

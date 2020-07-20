@@ -16,6 +16,7 @@ using Resources = UnityEngine.Resources;
 namespace AI_HLightControl
 {
     [BepInProcess("AI-Syoujyo")]
+    [BepInProcess("AI-Shoujo")]
     [BepInPlugin(nameof(AI_HLightControl), nameof(AI_HLightControl), VERSION)]
     public class AI_HLightControl : BaseUnityPlugin
     {
@@ -124,11 +125,11 @@ namespace AI_HLightControl
 
             toggle.group = null;
             
+            foreach (var b in btn.Where(b => name == b.Definition.Key))
+                toggle.isOn = !b.Value;
+            
             toggle.onValueChanged.AddListener(clickEvent);
             toggle.onValueChanged.AddListener((state) => { imageComp.enabled = state; });
-
-            foreach (var b in btn.Where(b => name == b.Definition.Key))
-                toggle.isOn = b.Value;
 
             // Lower the position
             var newRect = copy.GetComponent<RectTransform>();
@@ -138,6 +139,9 @@ namespace AI_HLightControl
             newRect.sizeDelta = new Vector2(170, 50);
 
             toggles.Add(toggle);
+            
+            foreach (var b in btn.Where(b => name == b.Definition.Key))
+                toggle.isOn = b.Value;
             
             multiplier++;
         }
