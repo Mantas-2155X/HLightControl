@@ -152,9 +152,15 @@ namespace AI_HLightControl
             sprite = __instance;
 
             created = Content != null;
-            
+
             if (created)
+            {
+                for (var i = 0; i < toggleInfo.Count; i++)
+                    foreach (var b in btn.Where(b => b.Definition.Key == toggleInfo[i].name))
+                        toggles[i].isOn = b.Value;
+
                 return;
+            }
             
             oldParents = new GameObject[2];
             newParents = new GameObject[2];
