@@ -4,6 +4,7 @@ This plugin allows you to change some light settings during H
 # DO NOT REUPLOAD WITHOUT PERMISSION | 未经许可请勿转载  
 
 **Current Features:**  
+* Apply custom defaults on start of H
 * Freeze camera light  
 * Lower shadow resolution (1-15FPS boost)  
 * Disable backlight (3-7FPS boost)  
