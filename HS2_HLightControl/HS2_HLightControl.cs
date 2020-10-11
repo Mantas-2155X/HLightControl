@@ -17,7 +17,7 @@ namespace HS2_HLightControl
     [BepInPlugin(nameof(HS2_HLightControl), nameof(HS2_HLightControl), VERSION)]
     public class HS2_HLightControl : BaseUnityPlugin
     {
-        public const string VERSION = "1.2.2";
+        public const string VERSION = "1.2.3";
 
         private static int multiplier = 1;
         
@@ -42,14 +42,17 @@ namespace HS2_HLightControl
             new NewToggleInfo("Lock Camlight", false, false, btn_LockCamLight),
             new NewToggleInfo("Lower Shadow Resolution", true, false, btn_LowerLightsResolution)
         };
+        private static Toggle auxiliaryLightToggle;
         
         private static readonly List<ConfigEntry<bool>> btn = new List<ConfigEntry<bool>>();
 
+        private static ConfigEntry<bool> auxiliaryLight { get; set; }
         private static ConfigEntry<int> customShadowResolution { get; set; }
 
         private void Awake()
         {
             customShadowResolution = Config.Bind("General", "Shadow resolution target", 1024, new ConfigDescription("What resolution to apply when clicking 'Lower shadow resolution'"));
+            auxiliaryLight = Config.Bind("Defaults", "Auxiliary Light", true);
 
             btn.Clear();
             
@@ -183,6 +186,14 @@ namespace HS2_HLightControl
             foreach (var toggle in toggleInfo)
                 AddBtn(back, orig, toggle.name, toggle.resize, toggle.clickEvent);
 
+            var sub = UI.transform.Find("Light/SubLight");
+            
+            if (sub != null)
+                auxiliaryLightToggle = sub.GetComponentInChildren<Toggle>();
+
+            if (auxiliaryLightToggle != null)
+                auxiliaryLightToggle.isOn = auxiliaryLight.Value;
+            
             created = true;
         }
         
@@ -200,6 +211,9 @@ namespace HS2_HLightControl
                 toggles.Clear();
                 toggles = null;
             }
+            
+            if (auxiliaryLightToggle != null)
+                auxiliaryLightToggle.isOn = true;
         }
         
         [HarmonyPostfix, HarmonyPatch(typeof(HColorPickerCtrl), "Open")]
