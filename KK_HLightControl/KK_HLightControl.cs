@@ -20,7 +20,7 @@ namespace KK_HLightControl
     [BepInPlugin(nameof(KK_HLightControl), nameof(KK_HLightControl), VERSION)]
     public class KK_HLightControl : BaseUnityPlugin
     {
-        public const string VERSION = "1.2.3";
+        public const string VERSION = "1.2.4";
         
         private static HSprite sprite;
         
@@ -77,9 +77,12 @@ namespace KK_HLightControl
             // Set names for object and text
             var copy = Instantiate(source.gameObject, background);
             copy.name = name;
-
+            
             var text = copy.GetComponentInChildren<TextMeshProUGUI>();
             text.text = name;
+
+            // peepodumb
+            var trash = text.rectTransform;
             text.autoSizeTextContainer = resize;
             
             // Clear listeners and add own custom event
@@ -97,7 +100,7 @@ namespace KK_HLightControl
 
             // Align position
             var newRect = copy.GetComponent<RectTransform>();
-            
+
             var oldLMin = newRect.offsetMin;
             var oldLMax = newRect.offsetMax;
             

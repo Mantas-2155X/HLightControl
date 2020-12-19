@@ -20,7 +20,7 @@ namespace AI_HLightControl
     [BepInPlugin(nameof(AI_HLightControl), nameof(AI_HLightControl), VERSION)]
     public class AI_HLightControl : BaseUnityPlugin
     {
-        public const string VERSION = "1.2.3";
+        public const string VERSION = "1.2.4";
 
         private static int multiplier = 1;
 
