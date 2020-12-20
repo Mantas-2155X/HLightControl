@@ -31,7 +31,8 @@ namespace KK_HLightControl
 
         private static bool lockCamLight;
         private static bool created;
-        
+        private static bool mute;
+
         private static Light[] lights;
         private static int[] resolutions;
         
@@ -82,7 +83,8 @@ namespace KK_HLightControl
             text.text = name;
 
             // peepodumb
-            var trash = text.rectTransform;
+            // Need to call this to populate the private RT field or autoSizeTextContainer will crash
+            var _ = text.rectTransform;
             text.autoSizeTextContainer = resize;
             
             // Clear listeners and add own custom event
@@ -162,25 +164,28 @@ namespace KK_HLightControl
                 }
             }
 
+            mute = true;
             foreach (var toggle in toggleInfo)
                 AddBtn(back, orig, toggle.name, toggle.resize, toggle.clickEvent);
+            mute = false;
 
             created = true;
         }
-        
+
         [HarmonyPostfix, HarmonyPatch(typeof(HSceneProc), "EndProc")]
         public static void HSceneProc_EndProc_Cleanup()
         {
             created = false;
+            mute = true;
 
             if (toggles != null)
             {
                 for (var i = 0; i < toggles.Count; i++)
                     toggles[i].isOn = toggleInfo[i].toggled;
 
-                toggles.Clear();
                 toggles = null;
             }
+            mute = false;
         }
 
         private static void btn_LockCamLight(bool value)
@@ -208,7 +213,8 @@ namespace KK_HLightControl
                 newParent = null;
             }
                 
-            Utils.Sound.Play(SystemSE.sel);
+            if(!mute)
+                Utils.Sound.Play(SystemSE.sel);
         }
         
         private static void btn_LowerLightsResolution(bool value)
@@ -224,6 +230,9 @@ namespace KK_HLightControl
                     if(lights[i] != null)
                         lights[i].shadowCustomResolution = resolutions[i];
             }
+                
+            if(!mute)
+                Utils.Sound.Play(SystemSE.sel);
         }
     }
     
