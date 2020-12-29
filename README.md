@@ -7,7 +7,7 @@ This plugin allows you to change some light settings during H
 * Apply custom defaults on start of H
 * Freeze camera light  
 * Lower shadow resolution (1-15FPS boost)  
-* Disable backlight (3-7FPS boost)  
+* [AI, HS2] Disable backlight (3-7FPS boost)  
 * [AI] Disable auxiliary lights (1-5FPS boost)  
 
 **Usage:**  
