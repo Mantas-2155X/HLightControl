@@ -19,7 +19,7 @@ namespace KKS_HLightControl
     [BepInPlugin(nameof(KKS_HLightControl), nameof(KKS_HLightControl), VERSION)]
     public class KKS_HLightControl : BaseUnityPlugin
     {
-        public const string VERSION = "1.2.4";
+        public const string VERSION = "1.2.5";
         
         private static HSprite sprite;
         

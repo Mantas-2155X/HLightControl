@@ -17,7 +17,7 @@ namespace HS2_HLightControl
     [BepInPlugin(nameof(HS2_HLightControl), nameof(HS2_HLightControl), VERSION)]
     public class HS2_HLightControl : BaseUnityPlugin
     {
-        public const string VERSION = "1.2.4";
+        public const string VERSION = "1.2.5";
 
         private static int multiplier = 1;
         
